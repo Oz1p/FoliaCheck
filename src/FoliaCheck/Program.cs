@@ -1,10 +1,6 @@
 ﻿using ICSharpCode.SharpZipLib.Zip;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FoliaCheck
 {
@@ -41,13 +37,15 @@ namespace FoliaCheck
                 {
                     using (ZipFile jarFile = new ZipFile(fs))
                     {
+                        bool found = false;
+
+                       
                         ZipEntry pluginEntry = jarFile.GetEntry("plugin.yml");
                         if (pluginEntry != null)
                         {
                             using (Stream pluginStream = jarFile.GetInputStream(pluginEntry))
                             using (StreamReader reader = new StreamReader(pluginStream))
                             {
-                                bool found = false;
                                 string line;
                                 while ((line = reader.ReadLine()) != null)
                                 {
@@ -57,23 +55,39 @@ namespace FoliaCheck
                                         break;
                                     }
                                 }
+                            }
+                        }
 
-                                if (found)
+                        if (!found)
+                        {
+                            ZipEntry paperEntry = jarFile.GetEntry("paper-plugin.yml");
+                            if (paperEntry != null)
+                            {
+                                using (Stream paperStream = jarFile.GetInputStream(paperEntry))
+                                using (StreamReader reader = new StreamReader(paperStream))
                                 {
-                                    Console.ForegroundColor = ConsoleColor.Green;
-                                    Console.WriteLine("This plugin supports folia!");
-                                }
-                                else
-                                {
-                                    Console.ForegroundColor = ConsoleColor.Red;
-                                    Console.WriteLine("This plugin does not support folia!");
+                                    string line;
+                                    while ((line = reader.ReadLine()) != null)
+                                    {
+                                        if (line.Trim() == "folia-supported: true")
+                                        {
+                                            found = true;
+                                            break;
+                                        }
+                                    }
                                 }
                             }
+                        }
+
+                        if (found)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine("This plugin supports folia!");
                         }
                         else
                         {
                             Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine("Not a valid plugin!");
+                            Console.WriteLine("This plugin does not support folia!");
                         }
                     }
                 }
