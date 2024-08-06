@@ -1,18 +1,23 @@
 ﻿using ICSharpCode.SharpZipLib.Zip;
 using System;
 using System.IO;
+using System.Reflection;
 
 namespace FoliaCheck
 {
     class Program
     {
+        private static bool ismcplugin = false;
         static void Main(string[] args)
         {
-            Console.Title = "FoliaCheck by Oz1p";
+            string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            Console.Title = $"FoliaCheck v{version} by Oz1p";
+            Console.WriteLine($"Thanks for using FoliaCheck v{version}");
             if (args.Length != 1)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("Please drag a .jar file onto the program!");
+                Console.WriteLine("Please drag a .jar file onto the program or use arguments!");
+                Console.WriteLine("Example: FoliaCheck.exe <plugin_path>");
                 Console.ResetColor();
                 Console.WriteLine("Press ENTER to exit...");
                 Console.ReadKey();
@@ -30,7 +35,7 @@ namespace FoliaCheck
                 Console.ReadKey();
                 return;
             }
-
+            
             try
             {
                 using (FileStream fs = File.OpenRead(jarFilePath))
@@ -38,11 +43,12 @@ namespace FoliaCheck
                     using (ZipFile jarFile = new ZipFile(fs))
                     {
                         bool found = false;
+                        bool paper = false;
 
-                       
                         ZipEntry pluginEntry = jarFile.GetEntry("plugin.yml");
                         if (pluginEntry != null)
                         {
+                            ismcplugin = true;
                             using (Stream pluginStream = jarFile.GetInputStream(pluginEntry))
                             using (StreamReader reader = new StreamReader(pluginStream))
                             {
@@ -63,6 +69,8 @@ namespace FoliaCheck
                             ZipEntry paperEntry = jarFile.GetEntry("paper-plugin.yml");
                             if (paperEntry != null)
                             {
+                                ismcplugin = true;
+                                paper = true;
                                 using (Stream paperStream = jarFile.GetInputStream(paperEntry))
                                 using (StreamReader reader = new StreamReader(paperStream))
                                 {
@@ -78,7 +86,25 @@ namespace FoliaCheck
                                 }
                             }
                         }
-
+                        if (!ismcplugin)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("This is not a valid Bukkit/Paper plugin!");
+                            Console.ResetColor();
+                            Console.WriteLine("Press ENTER to exit...");
+                            Console.ReadKey();
+                            return;
+                        }
+                        if (paper)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Cyan;
+                            Console.WriteLine("This Plugin is a Paper Plugin.");
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Cyan;
+                            Console.WriteLine("This Plugin is a Bukkit Plugin.");
+                        }
                         if (found)
                         {
                             Console.ForegroundColor = ConsoleColor.Green;
